@@ -1,0 +1,42 @@
+$main-colour: green;
+$text-size: 30px;
+
+$viewDivWidth: 50%;
+
+#SCSSTest {
+  font-size: $text-size;
+  color: $main-colour;
+}
+
+.viewDiv {
+  display: inline-block;
+  align-content: center;
+  width: $viewDivWidth;
+  margin: 0 auto;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.carousel-container {
+  width: 100%; // Full width of the parent container
+  max-width: 30rem; // Optional max width if you want to limit it
+  height: auto; // Height will scale based on the width and image ratio
+  aspect-ratio: 16 / 9; // Set desired aspect ratio (e.g., 16:9 or 4:3)
+  background-color: #333; // Dark gray or black background for letterbox effect
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.carousel-container img {
+  width: 100%; // Image scales to the container width
+  height: 100%; // Maintains aspect ratio, filling container height
+  object-fit: contain; // Letterboxing effect when aspect ratios differ
+  display: block;
+}
