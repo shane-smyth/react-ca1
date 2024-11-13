@@ -24,6 +24,7 @@ class AttractionsForm extends React.Component
             selectedAttraction: null,
             showAddModal: false,
             showTagManger: false,
+            uniqueTags: [],
         }
     }
 
@@ -43,6 +44,7 @@ class AttractionsForm extends React.Component
                     return attraction
                 })
                 this.setState({attractions: updatedAttractions, selectedAttractions: updatedAttractions})
+                this.getUniqueTags()
                 // console.log(updatedAttractions)
             })
     }
@@ -154,11 +156,73 @@ class AttractionsForm extends React.Component
         this.setState({showTagManger: false})
     }
 
+    getUniqueTags = () =>
+    {
+        let allTags = this.state.attractions.flatMap(attraction => attraction.tags)
+        let uniqueTags = [...new Set(allTags)].sort()
+        this.setState({uniqueTags: uniqueTags})
+        console.log(uniqueTags)
+    }
+
+    handleAddTag = (newTag) => {
+        if (!this.state.uniqueTags.includes(newTag)) {
+            this.setState((prevState) => ({
+                uniqueTags: [...prevState.uniqueTags, newTag],
+            }));
+        }
+    };
+
+    handleEditTag = (oldTag, newTag) => {
+        // Update `uniqueTags` by replacing old tag with new one
+        const updatedTags = this.state.uniqueTags.map(tag =>
+            tag === oldTag ? newTag : tag
+        );
+
+        // Update each attraction’s `tags` list, replacing old tag with new tag
+        const updatedAttractions = this.state.attractions.map(attraction => {
+            if (attraction.tags && attraction.tags.includes(oldTag)) {
+                const updatedAttractionTags = attraction.tags.map(tag =>
+                    tag === oldTag ? newTag : tag
+                );
+                return { ...attraction, tags: updatedAttractionTags };
+            }
+            return attraction;
+        });
+
+        // Update the state with modified tags and attractions
+        this.setState({
+            uniqueTags: updatedTags,
+            attractions: updatedAttractions,
+            selectedAttractions: updatedAttractions,
+        });
+    };
+
+    handleDeleteTag = (tagToDelete) => {
+        // Remove the tag from `uniqueTags`
+        const updatedTags = this.state.uniqueTags.filter(tag => tag !== tagToDelete);
+
+        // Remove the tag from each attraction's `tags` list if it exists
+        const updatedAttractions = this.state.attractions.map(attraction => {
+            if (attraction.tags && attraction.tags.includes(tagToDelete)) {
+                const filteredTags = attraction.tags.filter(tag => tag !== tagToDelete);
+                return { ...attraction, tags: filteredTags };
+            }
+            return attraction;
+        });
+
+        // Update the state with modified tags and attractions
+        this.setState({
+            uniqueTags: updatedTags,
+            attractions: updatedAttractions,
+            selectedAttractions: updatedAttractions,
+        });
+    };
 
     render() {
-        let allTags = this.state.attractions.flatMap(attraction => attraction.tags)
-        // console.log(allTags)
-        let uniqueTags = ["All Tags", "None", ...new Set(allTags)].sort()
+        // let allTags = this.state.attractions.flatMap(attraction => attraction.tags)
+        // // console.log(allTags)
+        // let uniqueTags = [...new Set(allTags)].sort()
+        // this.setState({uniqueTags: uniqueTags})
         // console.log(uniqueTags)
 
         return (
@@ -177,7 +241,7 @@ class AttractionsForm extends React.Component
                             onClick={this.handleTagManger}>
                             Tag Manager
                         </button>
-                        <DropDownTags tags={uniqueTags} handleTagChange={this.handleTagChange}/>
+                        <DropDownTags tags={this.state.uniqueTags} handleTagChange={this.handleTagChange}/>
                         <SearchBar handleSearchChange={this.handleSearchChange}/>
                         <IsFreeCheckBox handleShowOnlyFreeChange={this.handleShowOnlyFreeChange}/>
                         <RatingDropDown handleRatingChange={this.handleRatingChange}/>
@@ -191,7 +255,7 @@ class AttractionsForm extends React.Component
                     <AddModal
                         showAddModal={this.state.showAddModal}
                         handleAddClose={this.handleCloseAddModal}
-                        uniqueTags={uniqueTags}
+                        allTags={this.state.uniqueTags}
                         attractions={this.state.attractions}
                         onAdd={this.handleAddAttraction}
                     />
@@ -200,6 +264,10 @@ class AttractionsForm extends React.Component
                     <TagManager
                         showTagManger={this.state.showTagManger}
                         handleTagMangerClose={this.handleCloseTagManger}
+                        tags={this.state.uniqueTags}
+                        onAddTag={this.handleAddTag}
+                        onEditTag={this.handleEditTag}
+                        onDeleteTag={this.handleDeleteTag}
                     />
                 )}
             </div>
@@ -323,9 +391,10 @@ class DropDownTags extends React.Component
     render()
     {
         let {tags} = this.props
+        let newTags = ["All Tags", "None", ...new Set(tags)]
         return(
             <select className="form-select" name={"tags"} onChange={this.handleChange}>
-                {tags.map((tag, index) => (
+                {newTags.map((tag, index) => (
                     <option key={`${tag}-${index}`} value={tag}>{tag}</option>
                 ))}
             </select>
@@ -631,8 +700,8 @@ class AddModal extends React.Component
         }
     }
 
-    componentDidMount() {
-        this.setState({ tags: this.props.uniqueTags || [] });
+    componentDidMount(){
+        this.setState({tags: this.props.allTags});
     }
 
     handleChange = (e) =>
@@ -762,27 +831,94 @@ class AddModal extends React.Component
 class TagManager extends React.Component {
     constructor(props) {
         super(props)
+        this.state = {
+            newTagName: "",
+            selectedTag: null,
+        }
     }
 
+    handleTagSelect =(e) =>
+    {
+        this.setState({
+            selectedTag: e.target.value,
+            newTagName: this.state.selectedTag === "Add New" ? "" : this.state.selectedTag
+        })
+        console.log(this.state.selectedTag)
+    }
+
+    handleTagNameChange = (e) =>
+    {
+        this.setState({newTagName: e.target.value})
+    }
+
+    handleAddOrUpdateTag = () =>
+    {
+        const { newTagName, selectedTag } = this.state;
+        if (selectedTag === "Add New") {
+            // Adding new tag
+            this.props.onAddTag(newTagName);
+        } else {
+            // Editing existing tag
+            this.props.onEditTag(selectedTag, newTagName);
+        }
+        this.setState({ selectedTag: null, newTagName: "" });
+    }
+
+    handleDeleteTag = () => {
+        const { selectedTag } = this.state;  // Access selectedTag from state
+        if (selectedTag) {
+            this.props.onDeleteTag(selectedTag);
+            this.setState({ selectedTag: null, newTagName: "" });  // Reset state after delete
+        }
+    };
+
     render() {
-        const {showTagManger, handleTagMangerClose} = this.props;
+        //TODO
+        // 1. have a drop down of all the tags
+        // 2. when a tag is selected a text input appears to either modify the tags name or
+        //    if "All New" was selected it gives a empty input and a button to add it to the list
+        // 3. If the user did not select "Add New" then show a delete button
+
+        let {showTagManger, handleTagMangerClose, tags} = this.props
+        let {selectedTag, newTagName} = this.state
+        let tagOptions = ["Add New", ...new Set(tags)]
 
         return (
-            <div style={{display: "contents"}}>
-
-                {/*https://getbootstrap.com/docs/5.3/components/modal/*/}
+            <div style={{ display: "contents" }}>
                 <div className={`modal fade ${showTagManger ? "show" : ""}`}
-                     style={{ display: showTagManger ? "block" : "none" }}
-                     tabIndex="-1"
-                     id="modifyDataModalToggle">
+                     style={{ display: showTagManger ? "block" : "none" }} tabIndex="-1">
                     <div className="modal-dialog modal-fullscreen">
                         <div className="modal-content">
                             <div className="modal-header">
-                                <h1 className="modal-title fs-5" id="modifyDataModalToggle">Tag Manager</h1>
+                                <h1 className="modal-title fs-5">Tag Manager</h1>
                                 <button type="button" className="btn-close" onClick={handleTagMangerClose}></button>
                             </div>
                             <div className="modal-body">
-                                Tag Manager
+                                <select className="form-select" onChange={this.handleTagSelect} value={selectedTag || "none"}>
+                                    <option value="none" disabled>Select Tag</option>
+                                    {tagOptions.map((tag, index) => (
+                                        <option key={index} value={tag}>{tag}</option>
+                                    ))}
+                                </select>
+                                {selectedTag && (
+                                    <div>
+                                        <input
+                                            type="text"
+                                            className="form-control my-2"
+                                            placeholder="Enter tag name"
+                                            value={newTagName || ""}
+                                            onChange={this.handleTagNameChange}
+                                        />
+                                        <button className="btn btn-primary" onClick={this.handleAddOrUpdateTag}>
+                                            {selectedTag === "Add New" ? "Add Tag" : "Save Changes"}
+                                        </button>
+                                        {selectedTag !== "Add New" && (
+                                            <button className="btn btn-danger ms-2" onClick={this.handleDeleteTag}>
+                                                Delete Tag
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-secondary" onClick={handleTagMangerClose}>Close</button>
