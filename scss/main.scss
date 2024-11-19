@@ -1,12 +1,19 @@
-$main-colour: green;
-$text-size: 30px;
-
 $viewDivWidth: 50%;
+$formWidth: 60%;
+$formHeight: 60%;
 
-#SCSSTest {
-  font-size: $text-size;
-  color: $main-colour;
-}
+$carousel-max-width: 30rem;
+$carousel-bg-color: #333;
+
+$spacing-small: 1rem;
+$spacing-medium: 2rem;
+
+$dropdown-default-width: 20%;
+$dropdown-small-screen-width: 100%;
+
+$aspect-ratio: 16 / 9;
+
+
 
 .viewDiv {
   display: inline-block;
@@ -22,21 +29,74 @@ $viewDivWidth: 50%;
 }
 
 .carousel-container {
-  width: 100%; // Full width of the parent container
-  max-width: 30rem; // Optional max width if you want to limit it
-  height: auto; // Height will scale based on the width and image ratio
-  aspect-ratio: 16 / 9; // Set desired aspect ratio (e.g., 16:9 or 4:3)
-  background-color: #333; // Dark gray or black background for letterbox effect
+  width: 100%;
+  max-width: $carousel-max-width;
+  height: auto;
+  aspect-ratio: $aspect-ratio;
+  background-color: $carousel-bg-color;
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  margin-bottom: 1rem;
+  margin-bottom: $spacing-small;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
 }
 
-.carousel-container img {
-  width: 100%; // Image scales to the container width
-  height: 100%; // Maintains aspect ratio, filling container height
-  object-fit: contain; // Letterboxing effect when aspect ratios differ
-  display: block;
+form {
+  width: $formWidth;
+  height: $formHeight;
+}
+
+#filterContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-small;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-medium;
+}
+
+.filterButtons {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-small;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+}
+
+.filterControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-small;
+  justify-content: center;
+  width: 100%;
+
+  @media (min-width: 768px) {
+    justify-content: space-evenly;
+  }
+
+  @media (max-width: 576px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.dropdownSize {
+  width: $dropdown-default-width;
+
+  @media (max-width: 576px) {
+    width: $dropdown-small-screen-width;
+  }
 }

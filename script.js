@@ -1,12 +1,3 @@
-// TODO
-//  Use only SCSS for your own code (5%)
-//  Add a new attraction. You must be able add data in all fields of the attraction, including multiple images. Remember to include the free property when adding a new attraction. The Add feature must display without any other content (such as the table) showing on the webpage (10%).
-//  Modify attraction. You must be able change the data in all fields of the attraction, including the images. The Modify feature must display without any other content (such as the table) showing on the webpage (10%).
-//  You need to make a "tags manager" to allow the user to manage the list of available tags that can be applied to the attraction records. The tags list should be initialised when the original attractions dataset is fetched (5%)
-//  The "tags manager" can be used to add new tags (5%)
-//  When a tag is deleted, the tag must be deleted from all the attractions that contain it (5%)
-//  When a tag is modified, the tag must be modified in all the attractions that contain it (5%)
-
 class AttractionsForm extends React.Component
 {
     constructor(props)
@@ -34,7 +25,7 @@ class AttractionsForm extends React.Component
             .then(response => response.json())
             .then(attractions => {
                 let updatedAttractions = attractions.map(attraction => { //https://www.scaler.com/topics/add-property-to-object-javascript/
-                    if (attraction.description.toLowerCase().includes("free"))
+                    if (attraction.description.toLowerCase().includes("free")) // adding the free property
                     {
                         attraction.free = "yes"
                     }
@@ -44,31 +35,28 @@ class AttractionsForm extends React.Component
                     return attraction
                 })
                 this.setState({attractions: updatedAttractions, selectedAttractions: updatedAttractions})
-                this.getUniqueTags()
+                this.getUniqueTags() // calling the method that add the unique tags to the state
                 // console.log(updatedAttractions)
             })
     }
 
+    // functions for filtering and sorting the attractions
     handleTagChange = (selectedTag) =>
     {
         this.setState({selectedTag}, this.updateFilteredAttractions)
     }
-
     handleSearchChange = (searchQuery) =>
     {
         this.setState({searchQuery}, this.updateFilteredAttractions)
     }
-
     handleShowOnlyFreeChange = (showFreeOnly) =>
     {
         this.setState({showFreeOnly}, this.updateFilteredAttractions)
     }
-
     handleRatingChange = (minRating) =>
     {
         this.setState({minRating}, this.updateFilteredAttractions)
     }
-
     handleSortChange = (sortBy) =>
     {
         this.setState({sortBy}, this.updateFilteredAttractions)
@@ -76,8 +64,9 @@ class AttractionsForm extends React.Component
 
     updateFilteredAttractions = () =>
     {
-        let {attractions, selectedTag, searchQuery, showFreeOnly, minRating, sortBy} = this.state
-        let filteredAttractions = attractions.filter(attraction => {
+        let {attractions, selectedTag, searchQuery, showFreeOnly, minRating, sortBy} = this.state // uses the values gotten from the filtering handlers
+        let filteredAttractions = attractions.filter(attraction =>
+        {
             let matchesTag =
                 selectedTag === "All Tags" ||
                 (selectedTag === "None" && (!attraction.tags || attraction.tags.length === 0)) ||
@@ -97,7 +86,7 @@ class AttractionsForm extends React.Component
             filteredAttractions.sort((a, b) => a.name.localeCompare(b.name))
         }
         else if (sortBy === "Rating") {
-            filteredAttractions.sort((a, b) => b.rating - a.rating)
+            filteredAttractions.sort((a, b) =>  b.rating - a.rating)
         }
 
         this.setState({selectedAttractions: filteredAttractions})
@@ -138,11 +127,11 @@ class AttractionsForm extends React.Component
     }
 
     handleAddAttraction = (newAttraction) => {
-        this.setState(prevState => ({
-            attractions: [...prevState.attractions, newAttraction],
-            selectedAttractions: [...prevState.selectedAttractions, newAttraction],
+        this.setState({
+            attractions: [...this.state.attractions, newAttraction],
+            selectedAttractions: [...this.state.selectedAttractions, newAttraction],
             showAddModal: false,
-        }))
+        })
     }
 
 
@@ -166,57 +155,53 @@ class AttractionsForm extends React.Component
 
     handleAddTag = (newTag) => {
         if (!this.state.uniqueTags.includes(newTag)) {
-            this.setState((prevState) => ({
-                uniqueTags: [...prevState.uniqueTags, newTag],
-            }));
+            this.setState({uniqueTags: [...this.state.uniqueTags, newTag],})
         }
-    };
+    }
 
     handleEditTag = (oldTag, newTag) => {
-        // Update `uniqueTags` by replacing old tag with new one
-        const updatedTags = this.state.uniqueTags.map(tag =>
+        // update uniqueTags by replacing old tag with new one
+        let updatedTags = this.state.uniqueTags.map(tag =>
             tag === oldTag ? newTag : tag
-        );
+        )
 
-        // Update each attraction’s `tags` list, replacing old tag with new tag
-        const updatedAttractions = this.state.attractions.map(attraction => {
+        // update each attraction’s tags list by replacing old tag with new tag
+        let updatedAttractions = this.state.attractions.map(attraction => {
             if (attraction.tags && attraction.tags.includes(oldTag)) {
-                const updatedAttractionTags = attraction.tags.map(tag =>
+                let updatedAttractionTags = attraction.tags.map(tag =>
                     tag === oldTag ? newTag : tag
-                );
-                return { ...attraction, tags: updatedAttractionTags };
+                )
+                return {...attraction, tags: updatedAttractionTags}
             }
-            return attraction;
-        });
+            return attraction
+        })
 
-        // Update the state with modified tags and attractions
         this.setState({
             uniqueTags: updatedTags,
             attractions: updatedAttractions,
             selectedAttractions: updatedAttractions,
-        });
-    };
+        })
+    }
 
     handleDeleteTag = (tagToDelete) => {
-        // Remove the tag from `uniqueTags`
-        const updatedTags = this.state.uniqueTags.filter(tag => tag !== tagToDelete);
+        // remove the tag from uniqueTags
+        let updatedTags = this.state.uniqueTags.filter(tag => tag !== tagToDelete)
 
-        // Remove the tag from each attraction's `tags` list if it exists
-        const updatedAttractions = this.state.attractions.map(attraction => {
+        // Remove the tag from each attraction's tags list if it exists
+        let updatedAttractions = this.state.attractions.map(attraction => {
             if (attraction.tags && attraction.tags.includes(tagToDelete)) {
-                const filteredTags = attraction.tags.filter(tag => tag !== tagToDelete);
-                return { ...attraction, tags: filteredTags };
+                let filteredTags = attraction.tags.filter(tag => tag !== tagToDelete)
+                return {...attraction, tags: filteredTags.length ? filteredTags : []}
             }
-            return attraction;
-        });
+            return attraction
+        })
 
-        // Update the state with modified tags and attractions
         this.setState({
             uniqueTags: updatedTags,
             attractions: updatedAttractions,
             selectedAttractions: updatedAttractions,
-        });
-    };
+        })
+    }
 
     render() {
         // let allTags = this.state.attractions.flatMap(attraction => attraction.tags)
@@ -229,26 +214,35 @@ class AttractionsForm extends React.Component
             <div className="album py-5 bg-body-tertiary">
                 <div className="container">
                     <div id="filterContainer">
-                        <button
-                            type="button"
-                            className="btn btn-sm btn-outline-secondary"
-                            onClick={this.handleAddModal}>
-                            add
-                        </button>
-                        <button
-                            type="button"
-                            className="btn btn-sm btn-outline-secondary"
-                            onClick={this.handleTagManger}>
-                            Tag Manager
-                        </button>
-                        <DropDownTags tags={this.state.uniqueTags} handleTagChange={this.handleTagChange}/>
-                        <SearchBar handleSearchChange={this.handleSearchChange}/>
-                        <IsFreeCheckBox handleShowOnlyFreeChange={this.handleShowOnlyFreeChange}/>
-                        <RatingDropDown handleRatingChange={this.handleRatingChange}/>
-                        <SortDropDown handleSortChange={this.handleSortChange}/>
+                        <div className="filterButtons">
+                            <button
+                                type="button"
+                                className="btn btn-primary"
+                                onClick={this.handleAddModal}>
+                                Add Attraction
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn btn-primary"
+                                onClick={this.handleTagManger}>
+                                Tag Manager
+                            </button>
+                        </div>
+                        <div className="filterControls">
+                            <SearchBar handleSearchChange={this.handleSearchChange}/>
+                            <IsFreeCheckBox handleShowOnlyFreeChange={this.handleShowOnlyFreeChange}/>
+                            <DropDownTags tags={this.state.uniqueTags} handleTagChange={this.handleTagChange}/>
+                            <RatingDropDown handleRatingChange={this.handleRatingChange}/>
+                            <SortDropDown handleSortChange={this.handleSortChange}/>
+                        </div>
                     </div>
                     <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
-                        <AttractionsCard attractions={this.state.selectedAttractions} handleSaveChanges={this.handleSaveChanges} handleDeleteChanges={this.handleDeleteChanges}/>
+                        <AttractionsCard
+                            attractions={this.state.selectedAttractions}
+                            handleSaveChanges={this.handleSaveChanges}
+                            handleDeleteChanges={this.handleDeleteChanges}
+                            uniqueTags={this.state.uniqueTags}
+                        />
                     </div>
                 </div>
                 {this.state.showAddModal && (
@@ -370,6 +364,7 @@ class AttractionsCard extends React.Component
                         handleModifyClose={this.handleCloseModifyModal}
                         onSave={this.props.handleSaveChanges}
                         onDelete={this.props.handleDeleteChanges}
+                        allTags={this.props.uniqueTags}
                     />
                 )}
             </div>
@@ -393,7 +388,7 @@ class DropDownTags extends React.Component
         let {tags} = this.props
         let newTags = ["All Tags", "None", ...new Set(tags)]
         return(
-            <select className="form-select" name={"tags"} onChange={this.handleChange}>
+            <select className="form-select dropdownSize" name={"tags"} onChange={this.handleChange}>
                 {newTags.map((tag, index) => (
                     <option key={`${tag}-${index}`} value={tag}>{tag}</option>
                 ))}
@@ -416,11 +411,24 @@ class SearchBar extends React.Component
     render()
     {
         return(
-            <input
-                type="text"
-                placeholder="Search attractions..."
-                onChange={this.handleChange}
-            />
+            <form className="form">
+                <button>
+                    <svg width="17" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="search">
+                        <path d="M7.667 12.667A5.333 5.333 0 107.667 2a5.333 5.333 0 000 10.667zM14.334 14l-2.9-2.9" stroke="currentColor" strokeWidth="1.333" strokeLinecap="round" strokeLinejoin="round"></path>
+                    </svg>
+                </button>
+                <input
+                    type="text"
+                    className="input"
+                    placeholder="Search"
+                    onChange={this.handleChange}
+                />
+                <button className="reset" type="reset">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </form>
         )
     }
 }
@@ -439,13 +447,15 @@ class IsFreeCheckBox extends React.Component
     render()
     {
         return(
-            <label>
-                <input
-                    type="checkbox"
-                    onChange={this.handleChange}
-                />
-                Show Free Only
-            </label>
+            <div className="checkbox-wrapper-46">
+                <input type="checkbox" id="cbx-46" className="inp-cbx" onChange={this.handleChange}/>
+                <label htmlFor="cbx-46" className="cbx"
+                    ><span>
+                    <svg viewBox="0 0 12 10" height="10px" width="12px">
+                        <polyline points="1.5 6 4.5 9 10.5 1"></polyline></svg></span
+                    ><span>Free</span>
+                </label>
+            </div>
         )
     }
 }
@@ -464,7 +474,7 @@ class RatingDropDown extends React.Component
     render()
     {
         return(
-            <select onChange={this.handleChange}>
+            <select className="form-select dropdownSize" onChange={this.handleChange}>
                 <option value="none" disabled selected hidden>Choose Rating</option> {/*https://www.tutorialrepublic.com/faq/how-to-make-a-placeholder-for-a-select-box-in-html.php#:~:text=Answer%3A%20Use%20the%20disabled%20and,element%20that%20has%20empty%20value.*/}
                 <option value="5">5</option>
                 <option value="4">4</option>
@@ -490,7 +500,7 @@ class SortDropDown extends React.Component
     render()
     {
         return(
-            <select onChange={this.handleChange}>
+            <select className="form-select dropdownSize" onChange={this.handleChange}>
                 <option value="none" disabled selected hidden>Sort By</option>
                 <option>Name</option>
                 <option>Rating</option>
@@ -505,7 +515,7 @@ class ViewModal extends React.Component {
         super(props)
     }
     render() {
-        let { attraction, showViewModal, handleViewClose } = this.props
+        let {attraction, showViewModal, handleViewClose} = this.props
 
         return (
             // https://getbootstrap.com/docs/5.3/components/modal/
@@ -524,9 +534,9 @@ class ViewModal extends React.Component {
                             </div>
                             <p><strong>Description:</strong> {attraction.description}</p>
                             <p><strong>Address:</strong> {attraction.address}</p>
-                            <p><strong>Phone:</strong> {(attraction.phoneNumber === "" || null ? "none" : attraction.phoneNumber)}</p>
+                            <p><strong>Phone:</strong> {(attraction.phoneNumber === "" || null ? "none" : attraction.phoneNumber)}</p>{/*if no phone num display "none"*/}
                             <p><strong>Rating:</strong> {attraction.rating}</p>
-                            <p><strong>Tags:</strong> {attraction.tags ? attraction.tags.join(", ") : "None"}</p>
+                            <p><strong>Tags:</strong> {attraction.tags ? attraction.tags.join(", ") : "None"}</p>{/*add in a comma between tags, and if no tags "none"*/}
                         </div>
                         <div className="modal-footer">
                             <button type="button" className="btn btn-secondary" onClick={handleViewClose}>Close</button>
@@ -546,13 +556,12 @@ class Carousel extends React.Component
     }
 
     render() {
-        let {images} = this.props
-
         return(
             // https://getbootstrap.com/docs/4.0/components/carousel/
             <div id="carouselExampleIndicators" className="carousel slide" data-bs-ride="carousel">
                 <ol className="carousel-indicators">
-                    {images.map((image, index) => (
+                    {/*this is for the bars at the bottom indicating the amount of images*/}
+                    {this.props.images.map((image, index) => (
                         <li
                             key={index}
                             data-bs-target="#carouselExampleIndicators"
@@ -562,12 +571,14 @@ class Carousel extends React.Component
                     ))}
                 </ol>
                 <div className="carousel-inner">
-                    {images.map((image, index) => (
+                    {/*this is displaying the images*/}
+                    {this.props.images.map((image, index) => (
                         <div key={index} className={`carousel-item ${index === 0 ? "active" : ""}`}>
                             <img src={image} className="d-block w-100" alt="Attraction"/>
                         </div>
                     ))}
                 </div>
+                {/*buttons for switching between images*/}
                 <a className="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-bs-slide="prev">
                     <span className="carousel-control-prev-icon" aria-hidden="true"></span>
                     <span className="sr-only"></span>
@@ -587,19 +598,42 @@ class ModifyModal extends React.Component
     constructor(props) {
         super(props)
 
-        this.state =
-            {
-                name: props.attraction.name,
-                description: props.attraction.description,
-                address: props.attraction.address,
-                phoneNumber: props.attraction.phoneNumber,
-                rating: props.attraction.rating,
-            }
+        this.state = {
+            name: props.attraction.name,
+            description: props.attraction.description,
+            address: props.attraction.address,
+            phoneNumber: props.attraction.phoneNumber,
+            rating: props.attraction.rating,
+            tags: props.attraction.tags,
+            allTags: props.allTags,
+        }
     }
 
-    handleChange = e =>
+    handleChange = (e) =>
     {
         this.setState({[e.target.name]: e.target.value})
+    }
+
+    handleDelete = () =>
+    {
+        if (window.confirm("Are you sure you want to delete this attraction?")) {
+            let deletedAttraction = {...this.props.attraction}
+            this.props.onDelete(deletedAttraction)
+            this.props.handleModifyClose()
+        }
+    }
+
+    handleTagSelect = (e) =>
+    {
+        let selectedTag = e.target.value
+        if (selectedTag && !this.state.tags.includes(selectedTag)) {
+            this.setState({tags: [...this.state.tags, selectedTag]})
+        }
+    }
+
+    handleTagRemove = (tagToRemove) =>
+    {
+        this.setState({tags: this.state.tags.filter(tag => tag !== tagToRemove)})
     }
 
     handleSave = () => {
@@ -610,25 +644,17 @@ class ModifyModal extends React.Component
             address: this.state.address,
             phoneNumber: this.state.phoneNumber,
             rating: parseInt(this.state.rating),
+            tags: this.state.tags,
         }
 
         this.props.onSave(updatedAttraction)
         this.props.handleModifyClose()
     }
 
-    handleDelete = () =>
-    {
-        if (window.confirm("Are you sure you want to delete this attraction?")) {
-            let deletedAttraction = { ...this.props.attraction }
-            this.props.onDelete(deletedAttraction)
-            this.props.handleModifyClose()
-        }
-    }
-
     render()
     {
-        let { showModifyModal, handleModifyClose } = this.props
-        let { name, description, address, phoneNumber, rating } = this.state
+        let {showModifyModal, handleModifyClose} = this.props
+        let {name, description, address, phoneNumber, rating, tags, allTags} = this.state
 
         return (
             <div style={{display: "contents"}}>
@@ -651,7 +677,7 @@ class ModifyModal extends React.Component
                                         <span className="input-group-text">Name</span>
                                         <input type="text" className="form-control" name="name" value={name} onChange={this.handleChange} />
                                     </div>
-                                    <div className="input-group">
+                                    <div className="input-group mb-3">
                                         <span className="input-group-text">Description</span>
                                         <textarea className="form-control" name="description" value={description} onChange={this.handleChange} />
                                     </div>
@@ -666,6 +692,30 @@ class ModifyModal extends React.Component
                                     <div className="input-group mb-3">
                                         <span className="input-group-text">Rating</span>
                                         <input type="number" className="form-control" name="rating" value={rating} onChange={this.handleChange} />
+                                    </div>
+
+                                    <div className="input-group mb-3">
+                                        <span className="input-group-text">Tags</span>
+                                        <select className="form-select" onChange={this.handleTagSelect}>
+                                            <option value="none" disabled selected hidden>Select a Tag</option>
+                                            {/*when the user selects a tag it gets added to the state*/}
+                                            {allTags.map((tag, index) => (
+                                                <option key={`${tag}-${index}`} value={tag}>{tag}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    {/*https://getbootstrap.com/docs/4.0/components/badge/*/}
+                                    <div className="mb-3">
+                                        <span className="input-group-text">Selected Tags:</span>
+                                        <div className="d-flex flex-wrap">
+                                            {/*displays the tags that the attraction has*/}
+                                            {tags.map(tag => (
+                                                // when clicked the tags get removed
+                                                <span key={tag} className="badge bg-secondary m-1" onClick={() => this.handleTagRemove(tag)} style={{cursor: "pointer"}}>
+                                                {tag} X
+                                            </span>
+                                            ))}
+                                        </div>
                                     </div>
                                 </form>
                             </div>
@@ -701,7 +751,7 @@ class AddModal extends React.Component
     }
 
     componentDidMount(){
-        this.setState({tags: this.props.allTags});
+        this.setState({tags: this.props.allTags})
     }
 
     handleChange = (e) =>
@@ -710,30 +760,29 @@ class AddModal extends React.Component
     }
 
     handleTagSelect = (e) => {
-        let selectedTag = e.target.value;
+        let selectedTag = e.target.value
         if (selectedTag && !this.state.selectedTags.includes(selectedTag)) {
-            this.setState(prevState => ({
-                selectedTags: [...prevState.selectedTags, selectedTag] // Corrected here
-            }));
+            this.setState({selectedTags: [...this.state.selectedTags, selectedTag]})
         }
     }
 
     handleTagRemove = (tagToRemove) =>
     {
-        this.setState(prevState => ({
-            selectedTags: prevState.selectedTags.filter(tag => tag !== tagToRemove)
-        }))
+        this.setState({selectedTags: this.state.selectedTags.filter(tag => tag !== tagToRemove)})
     }
 
     handleImageChange = (e) =>
     {
-        let files = Array.from(e.target.files)
-        let photosURLs = files.map(file => URL.createObjectURL(file))
-        this.setState({ photosURLs })
+        //https://www.js-craft.io/blog/using-url-createobjecturl-to-create-uploaded-image-previews-in-javascript/#:~:text=createObjectURL()%20method.,the%20URL%20is%20explicitly%20released.
+        const url = window.URL.createObjectURL(e.target.files[0])
+        let photos = this.state.photosURLs
+        photos.push(url)
+        this.setState({photosURLs: photos})
+        console.log(this.state.photosURLs)
     }
 
     handleAddAttraction = () => {
-        const length = this.props.attractions.length;
+        let length = this.props.attractions.length
         let newAttraction = {
             id: length + 1,
             name: this.state.name,
@@ -741,7 +790,7 @@ class AddModal extends React.Component
             address: this.state.address,
             phoneNumber: this.state.phoneNumber,
             rating: this.state.rating,
-            tags: this.state.selectedTags, // Use only selected tags here
+            tags: this.state.selectedTags,
             photosURLs: this.state.photosURLs,
             free: "yes",
         }
@@ -787,24 +836,26 @@ class AddModal extends React.Component
                                     <input type="number" className="form-control" name="rating" value={rating} onChange={this.handleChange} min="1" max="5" />
                                 </div>
 
-                                {/* Tag Selection Dropdown */}
                                 <div className="input-group mb-3">
                                     <span className="input-group-text">Tags</span>
                                     <select className="form-select" onChange={this.handleTagSelect} defaultValue="">
-                                        <option value="" disabled>Select a tag</option>
+                                        <option value="none" disabled selected hidden>Select a Tag</option>
+                                        {/*when the user selects a tag it gets added to the state*/}
                                         {tags.map((tag, index) => (
                                             <option key={`${tag}-${index}`} value={tag}>{tag}</option>
                                         ))}
                                     </select>
                                 </div>
 
-                                {/* Display Selected Tags with Remove Option */}
+                                {/*https://getbootstrap.com/docs/4.0/components/badge/*/}
                                 <div className="mb-3">
                                     <span className="input-group-text">Selected Tags:</span>
                                     <div className="d-flex flex-wrap">
+                                        {/*displays the tags the user added to the selectedTags state*/}
                                         {selectedTags.map(tag => (
-                                            <span key={tag} className="badge bg-secondary m-1" onClick={() => this.handleTagRemove(tag)} style={{ cursor: "pointer" }}>
-                                                {tag} &times;
+                                            // displays the tags as a bootstrap badge when clicked they get removes from state
+                                            <span key={tag} className="badge bg-secondary m-1" onClick={() => this.handleTagRemove(tag)} style={{cursor: "pointer"}}>
+                                                {tag} X
                                             </span>
                                         ))}
                                     </div>
@@ -812,7 +863,14 @@ class AddModal extends React.Component
 
                                 <div className="input-group mb-3">
                                     <span className="input-group-text">Images</span>
-                                    <input type="file" className="form-control" multiple onChange={this.handleImageChange} />
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        capture="camera"
+                                        className="form-control"
+                                        multiple
+                                        onChange={this.handleImageChange}
+                                    />
                                 </div>
                             </form>
                         </div>
@@ -853,32 +911,30 @@ class TagManager extends React.Component {
 
     handleAddOrUpdateTag = () =>
     {
-        const { newTagName, selectedTag } = this.state;
+        let {newTagName, selectedTag} = this.state
         if (selectedTag === "Add New") {
             // Adding new tag
-            this.props.onAddTag(newTagName);
+            this.props.onAddTag(newTagName)
         } else {
             // Editing existing tag
-            this.props.onEditTag(selectedTag, newTagName);
+            this.props.onEditTag(selectedTag, newTagName)
         }
-        this.setState({ selectedTag: null, newTagName: "" });
+        this.setState({
+            selectedTag: null,
+            newTagName: "",})
     }
 
     handleDeleteTag = () => {
-        const { selectedTag } = this.state;  // Access selectedTag from state
-        if (selectedTag) {
-            this.props.onDeleteTag(selectedTag);
-            this.setState({ selectedTag: null, newTagName: "" });  // Reset state after delete
+        if (this.state.selectedTag) {
+            this.props.onDeleteTag(this.state.selectedTag)
+            this.setState({
+                selectedTag: null,
+                newTagName: ""
+            })
         }
-    };
+    }
 
     render() {
-        //TODO
-        // 1. have a drop down of all the tags
-        // 2. when a tag is selected a text input appears to either modify the tags name or
-        //    if "All New" was selected it gives a empty input and a button to add it to the list
-        // 3. If the user did not select "Add New" then show a delete button
-
         let {showTagManger, handleTagMangerClose, tags} = this.props
         let {selectedTag, newTagName} = this.state
         let tagOptions = ["Add New", ...new Set(tags)]
@@ -894,8 +950,8 @@ class TagManager extends React.Component {
                                 <button type="button" className="btn-close" onClick={handleTagMangerClose}></button>
                             </div>
                             <div className="modal-body">
-                                <select className="form-select" onChange={this.handleTagSelect} value={selectedTag || "none"}>
-                                    <option value="none" disabled>Select Tag</option>
+                                <select className="form-select dropdownSize" onChange={this.handleTagSelect} value={selectedTag || "none"}>
+                                    <option value="none" disabled selected hidden>Select a Tag</option>
                                     {tagOptions.map((tag, index) => (
                                         <option key={index} value={tag}>{tag}</option>
                                     ))}
@@ -909,9 +965,11 @@ class TagManager extends React.Component {
                                             value={newTagName || ""}
                                             onChange={this.handleTagNameChange}
                                         />
+                                        {/*if user selected "add new" it has a button saying "add tag" and if the user selected one if the others it says "save changes"*/}
                                         <button className="btn btn-primary" onClick={this.handleAddOrUpdateTag}>
                                             {selectedTag === "Add New" ? "Add Tag" : "Save Changes"}
                                         </button>
+                                        {/*if user selected "add new" it shows the delete button*/}
                                         {selectedTag !== "Add New" && (
                                             <button className="btn btn-danger ms-2" onClick={this.handleDeleteTag}>
                                                 Delete Tag
